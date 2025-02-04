@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,10 +9,15 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
+import axios from "axios";
+axios.defaults.withCredentials = true;
+import AuthContext from "../Context/AppContext";
+
 
 export default function HomeScreen() {
   const [fadeAnim] = useState(new Animated.Value(0)); // Initial fade value
-
+  const {user, setUser} = useContext(AuthContext)!;
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     // Fade-in animation for the welcome text
     Animated.timing(fadeAnim, {
@@ -20,10 +26,24 @@ export default function HomeScreen() {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+  useEffect(() => {
+    axios
+      .get("https://your-api.com/check-session")
+      .then((response) => {
+        if (response.data.isAuthenticated) {
+          setUser({
+            username: response.data.username,
+            accesskey: response.data.accesskey,
+          });
+        }
+      })
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
+  }, []);
 
+  if (loading) return <p>Loading...</p>;
   const handleButtonPress = () => {
     // Handle the button press (e.g., navigating to the workout logging screen)
-    
   };
 
   return (
@@ -37,6 +57,9 @@ export default function HomeScreen() {
           <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
             <Text style={styles.headerText}>
               Welcome to OneLife! Log your workouts on the fly!
+              <Text>
+                Username: {user?.username}
+              </Text>
             </Text>
             <Text style={styles.subHeaderText}>
               Stay consistent, track your progress, and reach your goals!

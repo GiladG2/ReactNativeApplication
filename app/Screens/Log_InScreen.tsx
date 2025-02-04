@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { Formik } from "formik";
 import {
   TextInput,
@@ -9,7 +9,8 @@ import {
   Platform,
 } from "react-native";
 import axios from "axios";
-
+import AppContext from "../Context/AppContext"
+axios.defaults.withCredentials = true;
 interface LogInProps {
   panel: string;
   setPanel: (panel: string) => void;
@@ -17,6 +18,7 @@ interface LogInProps {
 
 function Log_In({ panel, setPanel }: LogInProps) {
   const [message, setMessage] = useState("");
+  const { user, setUser } = useContext(AppContext)!;
 
   return (
     <View style={styles.container}>
@@ -26,18 +28,19 @@ function Log_In({ panel, setPanel }: LogInProps) {
         <Text style={styles.subHeader}>Log in to continue</Text>
         <Formik
           initialValues={{ username: "", password: "" }}
-          onSubmit={(values) => {
+          onSubmit={async (values) => {
             let baseURL;
           
             if (Platform.OS === "ios") {
               baseURL = "http://localhost:5030/api/UsersAPI/TestData";
-            } else if (Platform.OS === "android")
-               {
+            } else if (Platform.OS === "android") {
               baseURL = "http://10.0.2.2:5030/api/UsersAPI/TestData"; // Emulator
             } else {
               baseURL = "http://your-production-server.com/api/UsersAPI/TestData"; // Physical device or production
             }
+          
             console.log(values);
+            
             const options = {
               url: baseURL,
               method: "GET",
@@ -50,18 +53,29 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 password: values.password,
               },
             };
-
-            axios(options)
-              .then((response) => {
-                console.log("Response Status:", response.status);
-                console.log("Response Data:", response.data);
-                if (response.data.value == true) setMessage("Logged in");
-                if (response.data.value == false) setMessage("User not found");
-              })
-              .catch((error) => {
-                console.error("Error fetching data:", error);
-                setMessage("An error occurred");
-              });
+          
+            try {
+              // Send the login request
+              const response = await axios(options);
+              console.log("Response Status:", response.status);
+              console.log("Response Data:", response.data);
+          
+              // After login, check the session
+              const sessionResponse = await axios.get("http://10.0.2.2:5030/api/UsersAPI/CheckSession");
+          
+              if (sessionResponse.data.isAuthenticated) {
+                setUser({
+                  username: response.data.username,
+                  accesskey: response.data.accesskey,
+                });
+                setMessage("Logged in");
+              } else {
+                setMessage("Invalid username or password");
+              }
+            } catch (error) {
+              console.error("Error fetching data:", error);
+              setMessage("An error occurred");
+            }
           }}
         >
           {({ handleChange, handleBlur, handleSubmit, values }) => (
@@ -101,7 +115,10 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 </Text>
               </Text>
 
-              <TouchableOpacity style={styles.button} onPress={() => handleSubmit()}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={() => handleSubmit()}
+              >
                 <Text style={styles.buttonText}>Log In</Text>
               </TouchableOpacity>
 
