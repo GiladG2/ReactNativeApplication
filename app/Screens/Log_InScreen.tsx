@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import axios from "axios";
 import AppContext from "../Context/AppContext"
+import {  
+  useNavigation } from "expo-router";
 axios.defaults.withCredentials = true;
 interface LogInProps {
   panel: string;
@@ -19,7 +21,7 @@ interface LogInProps {
 function Log_In({ panel, setPanel }: LogInProps) {
   const [message, setMessage] = useState("");
   const { user, setUser } = useContext(AppContext)!;
-
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -31,18 +33,16 @@ function Log_In({ panel, setPanel }: LogInProps) {
           onSubmit={async (values) => {
             let baseURL;
           
-            if (Platform.OS === "ios") {
-              baseURL = "http://localhost:5030/api/UsersAPI/TestData";
-            } else if (Platform.OS === "android") {
-              baseURL = "http://10.0.2.2:5030/api/UsersAPI/TestData"; // Emulator
-            } else {
-              baseURL = "http://your-production-server.com/api/UsersAPI/TestData"; // Physical device or production
-            }
-          
+            if (Platform.OS === "android") {
+              baseURL = "http://10.0.2.2:5030";
+            } else  {
+              baseURL = "http://localhost:5030";
+            } 
+            
             console.log(values);
             
             const options = {
-              url: baseURL,
+              url: baseURL + "/api/UsersAPI/TestData",
               method: "GET",
               headers: {
                 Accept: "application/json",
@@ -52,6 +52,7 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 username: values.username,
                 password: values.password,
               },
+              withCredentials: true // Important for sending cookies
             };
           
             try {
@@ -61,14 +62,17 @@ function Log_In({ panel, setPanel }: LogInProps) {
               console.log("Response Data:", response.data);
           
               // After login, check the session
-              const sessionResponse = await axios.get("http://10.0.2.2:5030/api/UsersAPI/CheckSession");
-          
+              const sessionResponse = await axios.get(baseURL + "/api/UsersAPI/CheckSession");
+              console.log("Is Authenticated = " + sessionResponse.data.isAuthenticated)
               if (sessionResponse.data.isAuthenticated) {
                 setUser({
                   username: response.data.username,
                   accesskey: response.data.accesskey,
                 });
                 setMessage("Logged in");
+                setTimeout(() => {
+                  navigation.navigate('Home')
+                }, 2000);
               } else {
                 setMessage("Invalid username or password");
               }

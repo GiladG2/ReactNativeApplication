@@ -1,22 +1,20 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
-  ImageBackground,
   TouchableOpacity,
   Animated,
+  Platform,
 } from "react-native";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 import AuthContext from "../Context/AppContext";
 
-
 export default function HomeScreen() {
   const [fadeAnim] = useState(new Animated.Value(0)); // Initial fade value
-  const {user, setUser} = useContext(AuthContext)!;
+  const { user, setUser } = useContext(AuthContext)!;
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     // Fade-in animation for the welcome text
@@ -27,49 +25,61 @@ export default function HomeScreen() {
     }).start();
   }, [fadeAnim]);
   useEffect(() => {
+    var baseURL = "";
+    if (Platform.OS === "android") {
+      baseURL = "http://10.0.2.2:5030";
+    } else {
+      baseURL = "http://localhost:5030";
+    }
+    baseURL += "/api/UsersAPI/CheckSession";
     axios
-      .get("https://your-api.com/check-session")
+      .get(baseURL)
       .then((response) => {
         if (response.data.isAuthenticated) {
           setUser({
             username: response.data.username,
             accesskey: response.data.accesskey,
           });
+          
         }
       })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, []);
+  }, );
 
-  if (loading) return <p>Loading...</p>;
   const handleButtonPress = () => {
     // Handle the button press (e.g., navigating to the workout logging screen)
   };
-
+  const handleLogOut = () => {
+    var url = " ";
+    if (Platform.OS === "android") {
+      url = "http://10.0.2.2:5030";
+    } else {
+      url = "http://localhost:5030";
+    }
+    url += "/api/UsersAPI/Logout";
+    axios.post(url)
+    .then((response) => {
+      console.log(response.data.message)
+    })
+  };
   return (
     <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={{ uri: "https://your-image-url-here.jpg" }} // Replace with your image URL
-        style={styles.background}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay}>
-          <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-            <Text style={styles.headerText}>
-              Welcome to OneLife! Log your workouts on the fly!
-              <Text>
-                Username: {user?.username}
-              </Text>
-            </Text>
-            <Text style={styles.subHeaderText}>
-              Stay consistent, track your progress, and reach your goals!
-            </Text>
-            <TouchableOpacity style={styles.button} onPress={handleButtonPress}>
-              <Text style={styles.buttonText}>Start Logging</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </View>
-      </ImageBackground>
+      <View style={styles.overlay}>
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          <Text style={styles.headerText}>
+            Welcome to OneLife! Log your workouts on the fly!
+            <Text>Username: {user?.username}</Text>
+          </Text>
+          <Text style={styles.subHeaderText}>
+            Stay consistent, track your progress, and reach your goals!
+          </Text>
+          <Text onPress={() => handleLogOut()}>Log out</Text>
+          <TouchableOpacity style={styles.button} onPress={handleButtonPress}>
+            <Text style={styles.buttonText}>Start Logging</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
     </SafeAreaView>
   );
 }

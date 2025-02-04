@@ -1,10 +1,13 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-
+import { View, Text, useColorScheme } from 'react-native'
+import React, { useContext } from 'react'
+import AuthContext from '../Context/AppContext'
 const Training_LogScreen = () => {
+  const {user,setUser} = useContext(AuthContext)!
+
   return (
     <View>
-      <Text>Training_LogScreen</Text>
+      <Text>//
+      </Text>
     </View>
   )
 }

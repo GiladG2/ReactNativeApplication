@@ -11,7 +11,7 @@ const Tab = createBottomTabNavigator();
 
 export default function App() {
   return (
-<AuthProvider>
+      <AuthProvider>
       <NavigationBar />
     </AuthProvider>   
   );
