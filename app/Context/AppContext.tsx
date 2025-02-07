@@ -1,25 +1,37 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import { Platform } from "react-native";
 
 axios.defaults.withCredentials = true;
 
 type AuthContextType = {
   user: { username: string; accesskey: string } | null;
-  setUser: React.Dispatch<React.SetStateAction<{ username: string; accesskey: string } | null>>;
+  setUser: React.Dispatch<
+    React.SetStateAction<{ username: string; accesskey: string } | null>
+  >;
+  baseURL?: string;
 };
 type User = {
-    username: string;
-    accesskey: string;
-  } | null;
-  
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+  username: string;
+  accesskey: string;
+} | null;
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User>(null);
-
+  const baseURL =
+    Platform.OS === "android"
+      ? "http://10.0.2.2:5030/"
+      : "http://localhost:5030/";
   useEffect(() => {
     // Check if user is authenticated on app start
-    axios.get("http://10.0.2.2:5030/api/UsersAPI/CheckSession")
+    axios
+      .get("http://10.0.2.2:5030/api/UsersAPI/CheckSession")
       .then((response) => {
         if (response.data.isAuthenticated) {
           setUser({
@@ -32,10 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ user, setUser, baseURL }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export default AuthContext
+export default AuthContext;

@@ -1,9 +1,18 @@
 import { Formik } from "formik";
-import React, { useState } from "react";
-import { StyleSheet, TextInput, View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useContext, useState } from "react";
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
 import * as Yup from "yup"; // Import YUP for validation
+import AuthContext from "../Context/AppContext";
+import { useNavigation } from "expo-router";
 
 interface Sign_UpProps {
   panel: string;
@@ -13,7 +22,8 @@ interface Sign_UpProps {
 function Sign_Up({ panel, setPanel }: Sign_UpProps) {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const { user, setUser, baseURL } = useContext(AuthContext)!;
+  const navigation = useNavigation();
   // YUP Validation Schema
   const validationSchema = Yup.object().shape({
     username: Yup.string()
@@ -31,14 +41,21 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
         "Invalid Israeli phone number"
       )
       .required("Phone number is required"),
-    email: Yup.string().email("Invalid email address").required("Email is required"),
+    email: Yup.string()
+      .email("Invalid email address")
+      .required("Email is required"),
     firstname: Yup.string()
-      .matches(/^[A-Z][a-z]{1,}$/, "First name must start with an uppercase letter and follow with lowercase letters")
+      .matches(
+        /^[A-Z][a-z]{1,}$/,
+        "First name must start with an uppercase letter and follow with lowercase letters"
+      )
       .required("First name is required"),
-    gender: Yup.string().oneOf(["0", "1"], "Gender must be selected").required("Gender is required"),
+    gender: Yup.string()
+      .oneOf(["0", "1"], "Gender must be selected")
+      .required("Gender is required"),
     date: Yup.date().required("Date of birth is required"),
   });
-  const [message,setMessage] = useState("")
+  const [message, setMessage] = useState("");
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
@@ -58,8 +75,8 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
           validationSchema={validationSchema}
           onSubmit={(values) => {
             console.log(values);
-            const url = "http://localhost:5030/api/UsersAPI/AddUser";
-            console.log(url)
+            const url = baseURL + "api/UsersAPI/AddUser";
+            console.log(url);
             const params = {
               username: values.username,
               password: values.password,
@@ -82,14 +99,50 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
               .then((response) => {
                 console.log("Response Status:", response.status);
                 console.log("Response Data:", response.data);
-                if(response.data.value == true)
-                  setMessage("Registered successfully")
-                if(response.data.value == false)
-                  setMessage("An error occured")
+                if (response.data.value.message === "Success") {
+                  setMessage("Registered successfully");
+                  setTimeout(() => {
+                    const options = {
+                      url: baseURL + "api/UsersAPI/TestData",
+                      method: "GET",
+                      headers: {
+                        Accept: "application/json",
+                        "Content-Type": "application/json;charset=UTF-8",
+                      },
+                      params: {
+                        username: values.username,
+                        password: values.password,
+                      },
+                      withCredentials: true, // Important for sending cookies
+                    };
+                    axios(options).then(async () => {
+                      const sessionResponse = await axios.get(
+                        baseURL + "api/UsersAPI/CheckSession"
+                      );
+                      console.log(
+                        "Is Authenticated = " +
+                          sessionResponse.data.isAuthenticated
+                      );
+                      if (sessionResponse.data.isAuthenticated) {
+                        setUser({
+                          username: response.data.username,
+                          accesskey: response.data.accesskey,
+                        });
+                        navigation.navigate('Home');
+                      }
+                    });
+                  }, 1000);
+                }
+                if (response.data.value.message === "This username is taken")
+                  setMessage("This username is taken");
+                if (response.data.value.message === "Error") setMessage("Error");
               })
               .catch((error) => {
                 if (error.response) {
-                  console.error("Error submitting form:", error.response.status);
+                  console.error(
+                    "Error submitting form:",
+                    error.response.status
+                  );
                   console.error("Error data:", error.response.data);
                 } else if (error.request) {
                   console.error("No response received:", error.request);
@@ -183,16 +236,26 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
 
               <View style={styles.genderContainer}>
                 <TouchableOpacity
-                  style={[styles.genderButton, values.gender === "0" && styles.selectedGender]}
+                  style={[
+                    styles.genderButton,
+                    values.gender === "0" && styles.selectedGender,
+                  ]}
                   onPress={() => setFieldValue("gender", "0")}
                 >
-                  <Text style={[styles.genderText, { color: "black" }]}>Male</Text>
+                  <Text style={[styles.genderText, { color: "black" }]}>
+                    Male
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.genderButton, values.gender === "1" && styles.selectedGender]}
+                  style={[
+                    styles.genderButton,
+                    values.gender === "1" && styles.selectedGender,
+                  ]}
                   onPress={() => setFieldValue("gender", "1")}
                 >
-                  <Text style={[styles.genderText, { color: "black" }]}>Female</Text>
+                  <Text style={[styles.genderText, { color: "black" }]}>
+                    Female
+                  </Text>
                 </TouchableOpacity>
               </View>
 

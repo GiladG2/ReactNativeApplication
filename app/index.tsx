@@ -1,19 +1,24 @@
 import React from "react";
-import { StyleSheet } from "react-native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { StyleSheet, Text, View  } from "react-native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { NavigationContainer, NavigationIndependentTree } from "@react-navigation/native";
 import { AuthProvider } from "./Context/AppContext";
 import { NavigationBar } from "./Components/NavigationBar";
 
-const home = "Home";
-const logIn = "Get started";
-const trainingLog = "Training log";
-const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator(); // Correct Stack Navigator
 
 export default function App() {
   return (
-      <AuthProvider>
-      <NavigationBar />
-    </AuthProvider>   
+    
+    <AuthProvider>
+      <NavigationIndependentTree>
+        <NavigationContainer>
+        <Stack.Navigator  screenOptions={{ headerShown: false, }}>
+          <Stack.Screen name="Main" component={NavigationBar} />
+        </Stack.Navigator>
+      </NavigationContainer>
+      </NavigationIndependentTree>
+    </AuthProvider>
   );
 }
 

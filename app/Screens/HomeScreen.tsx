@@ -11,10 +11,12 @@ import {
 import axios from "axios";
 axios.defaults.withCredentials = true;
 import AuthContext from "../Context/AppContext";
+import GuestHome from "../Components/GuestHome";
+import LoggedHome from "../Components/LoggedHome";
 
 export default function HomeScreen() {
   const [fadeAnim] = useState(new Animated.Value(0)); // Initial fade value
-  const { user, setUser } = useContext(AuthContext)!;
+  const { user, setUser, baseURL } = useContext(AuthContext)!;
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     // Fade-in animation for the welcome text
@@ -25,45 +27,31 @@ export default function HomeScreen() {
     }).start();
   }, [fadeAnim]);
   useEffect(() => {
-    var baseURL = "";
-    if (Platform.OS === "android") {
-      baseURL = "http://10.0.2.2:5030";
-    } else {
-      baseURL = "http://localhost:5030";
-    }
-    baseURL += "/api/UsersAPI/CheckSession";
     axios
-      .get(baseURL)
+      .get(baseURL + "api/UsersAPI/CheckSession")
       .then((response) => {
         if (response.data.isAuthenticated) {
           setUser({
             username: response.data.username,
             accesskey: response.data.accesskey,
           });
-          
         }
       })
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, );
+  });
 
   const handleButtonPress = () => {
     // Handle the button press (e.g., navigating to the workout logging screen)
   };
   const handleLogOut = () => {
-    var url = " ";
-    if (Platform.OS === "android") {
-      url = "http://10.0.2.2:5030";
-    } else {
-      url = "http://localhost:5030";
-    }
-    url += "/api/UsersAPI/Logout";
-    axios.post(url)
-    .then((response) => {
-      console.log(response.data.message)
-    })
+    var url = baseURL + "api/UsersAPI/Logout";
+    axios.post(url).then((response) => {
+      console.log(response.data.message);
+    });
   };
   return (
+    
     <SafeAreaView style={styles.container}>
       <View style={styles.overlay}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
@@ -87,6 +75,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor:"#00aed1"
   },
   background: {
     flex: 1,

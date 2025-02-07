@@ -20,7 +20,7 @@ interface LogInProps {
 
 function Log_In({ panel, setPanel }: LogInProps) {
   const [message, setMessage] = useState("");
-  const { user, setUser } = useContext(AppContext)!;
+  const { user, setUser,baseURL } = useContext(AppContext)!;
   const navigation = useNavigation();
   return (
     <View style={styles.container}>
@@ -31,18 +31,9 @@ function Log_In({ panel, setPanel }: LogInProps) {
         <Formik
           initialValues={{ username: "", password: "" }}
           onSubmit={async (values) => {
-            let baseURL;
-          
-            if (Platform.OS === "android") {
-              baseURL = "http://10.0.2.2:5030";
-            } else  {
-              baseURL = "http://localhost:5030";
-            } 
-            
             console.log(values);
-            
             const options = {
-              url: baseURL + "/api/UsersAPI/TestData",
+              url: baseURL + "api/UsersAPI/TestData",
               method: "GET",
               headers: {
                 Accept: "application/json",
@@ -62,7 +53,7 @@ function Log_In({ panel, setPanel }: LogInProps) {
               console.log("Response Data:", response.data);
           
               // After login, check the session
-              const sessionResponse = await axios.get(baseURL + "/api/UsersAPI/CheckSession");
+              const sessionResponse = await axios.get(baseURL + "api/UsersAPI/CheckSession");
               console.log("Is Authenticated = " + sessionResponse.data.isAuthenticated)
               if (sessionResponse.data.isAuthenticated) {
                 setUser({
