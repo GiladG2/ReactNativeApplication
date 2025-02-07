@@ -28,7 +28,7 @@ const TrainingLogScreen = () => {
       </View>
     );
   };
-
+  const handleSave = () => {};
   return (
     <View style={styles.container}>
       <View style={styles.logContainer}>
@@ -54,52 +54,53 @@ const TrainingLogScreen = () => {
           dropdownStyle={styles.dropdownStyle}
           renderItem={renderItem}
         />
-        
-    <View style={styles.containerForLog}>
-      {/* Reps Section */}
-      <View style={styles.section}>
-        <Text style={styles.labelForSave}>Reps:</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setCurretReps(currentReps - 1)}
-        >
-          <Text style={styles.buttonText}>-</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          value={String(currentReps)}
-          editable={false}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setCurretReps(currentReps + 1)}
-        >
-          <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Weight Section */}
-      <View style={styles.section}>
-        <Text style={styles.label}>Weight:</Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setCurrentWeight(currentWeight - 1)}
-        >
-          <Text style={styles.buttonText}>-</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          value={String(currentWeight)}
-          editable={false}
-        />
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => setCurrentWeight(currentWeight + 1)}
-        >
-          <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        <View style={styles.containerForLog}>
+          {/* Reps Section */}
+          <View style={styles.section}>
+            <Text style={styles.labelForSave}>Reps:</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setCurretReps(currentReps - 1)}
+            >
+              <Text style={styles.buttonText}>-</Text>
+            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              value={String(currentReps)}
+              editable={false}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setCurretReps(currentReps + 1)}
+            >
+              <Text style={styles.buttonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Weight Section */}
+          <View style={styles.section}>
+            <Text style={styles.labelForSave}>Weight:</Text>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setCurrentWeight(currentWeight - 1)}
+            >
+              <Text style={styles.buttonText}>-</Text>
+            </TouchableOpacity>
+            <TextInput
+              style={styles.input}
+              value={String(currentWeight)}
+              editable={false}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setCurrentWeight(currentWeight + 1)}
+            >
+              <Text style={styles.buttonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+          <Text onPress={() => handleSave()} style={styles.saveButton}>Save</Text>
+        </View>
 
         <ExerciseLogged exercise={{ exerciseId: 0, exerciseName: "3" }} />
       </View>
@@ -178,27 +179,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   containerForLog: {
-    backgroundColor: "#f5e0c3", // Light beige
-    padding: 20,
-    borderRadius: 12,
-    shadowColor: "#3d1e0f", // Deep brown shadow
-    shadowOffset: { width: 2, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    alignItems: "center",
+    backgroundColor: "transperent",
     width: "80%",
-    alignSelf: "center",
   },
   section: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     marginVertical: 10,
+    marginLeft: 40,
   },
   labelForSave: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#af621c", // Coffee brown
+    color: "white", // Coffee brown
     marginRight: 10,
   },
   // Updated button style for refined look
@@ -208,8 +201,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
   },
   buttonText: {
-    fontSize: 22,
-    color: "#af621c", // Coffee brown
+    fontSize: 16,
+    color: "white", // Coffee brown
     fontWeight: "bold",
   },
   input: {
@@ -219,9 +212,17 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingHorizontal: 12,
     textAlign: "center",
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#3d1e0f",
     width: 50,
   },
+  saveButton:{
+    color:"white",
+    borderColor:"white",
+    borderRadius:10,
+    borderWidth:2,
+    textAlign:"center",
+    marginLeft:60,
+  }
 });
