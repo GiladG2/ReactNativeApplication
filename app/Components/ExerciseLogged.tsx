@@ -1,9 +1,12 @@
 import { View, Text, StyleSheet, TextInput } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 
 interface Exercise {
   exerciseName?: string;
   exerciseId?: number;
+  order: number;
+  reps?: number;
+  weight?: number;
 }
 
 interface ExerciseLoggedProp {
@@ -11,8 +14,7 @@ interface ExerciseLoggedProp {
 }
 
 const ExerciseLogged = ({ exercise }: ExerciseLoggedProp) => {
-  const [reps, setReps] = useState(0);
-  const [weight, setWeight] = useState(0);
+
 
   return (
     <View style={styles.exerciseContainer}>
@@ -20,12 +22,12 @@ const ExerciseLogged = ({ exercise }: ExerciseLoggedProp) => {
 
       {/* Reps Section */}
       <View style={styles.inputRow}>
-        <Text>Reps: {reps}</Text>
+        <Text>Reps: {exercise.reps}</Text>
       </View>
 
       {/* Weight Section */}
       <View style={styles.inputRow}>
-        <Text>Weight: {weight}</Text>
+        <Text>Weight: {exercise.weight}</Text>
       </View>
 
       <View style={styles.actionsContainer}>
@@ -77,11 +79,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   actionText: {
-    backgroundColor:"#af621c",
-    padding:10,
-    borderRadius:15,
-    width:70,
-    textAlign:"center",
+    backgroundColor: "#af621c",
+    padding: 10,
+    borderRadius: 15,
+    width: 70,
+    textAlign: "center",
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
