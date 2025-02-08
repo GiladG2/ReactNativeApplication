@@ -13,14 +13,8 @@ import ExerciseLogged from "../Components/ExerciseLogged";
 import { TextInput } from "react-native-gesture-handler";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Ionicons from "react-native-vector-icons/Ionicons";
-// Define the Exercise interface
-interface Exercise {
-  exerciseName?: string;
-  exerciseId?: number;
-  order: number;
-  reps?: number;
-  weight?: number;
-}
+import Exercise from "../Interfaces/IExercise"
+
 
 const TrainingLogScreen = () => {
   const [exercisesLogged, setExercisesLogged] = useState<Exercise[]>([]);
@@ -313,7 +307,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     width:250,
-    
+
   },
   input: {
     backgroundColor: "#fff",

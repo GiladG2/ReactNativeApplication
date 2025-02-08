@@ -1,13 +1,7 @@
 import { View, Text, StyleSheet, TextInput } from "react-native";
 import React from "react";
+import Exercise from "../Interfaces/IExercise";
 
-interface Exercise {
-  exerciseName?: string;
-  exerciseId?: number;
-  order: number;
-  reps?: number;
-  weight?: number;
-}
 
 interface ExerciseLoggedProp {
   exercise: Exercise;
