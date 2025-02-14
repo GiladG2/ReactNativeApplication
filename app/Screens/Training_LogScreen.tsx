@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React,  { useContext, useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -13,17 +13,20 @@ import ExerciseLogged from "../Components/ExerciseLogged";
 import { TextInput } from "react-native-gesture-handler";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import Exercise from "../Interfaces/IExercise"
-
+import { LinearGradient } from "expo-linear-gradient";
+import Exercise from "../Interfaces/IExercise";
+import GraphView from "../Components/GraphView";
 
 const TrainingLogScreen = () => {
   const [exercisesLogged, setExercisesLogged] = useState<Exercise[]>([]);
   const [value, setValue] = useState(null);
   const { baseURL } = useContext(AuthContext)!;
   const [exercises, setExercises] = useState<any[]>([]);
+  const [exerciseId, setExerciseId] = useState(0);
   const [currentReps, setCurretReps] = useState(0);
   const [currentWeight, setCurrentWeight] = useState(0);
-  const [order, setOrder] = useState(1); // Initialize order (starts at 1)
+  const [order, setOrder] = useState(1);
+  const { user } = useContext(AuthContext)!;
 
   // Date picker state
   const [date, setDate] = useState(new Date());
@@ -37,7 +40,35 @@ const TrainingLogScreen = () => {
         setExercises(response.data.value);
       }
     });
-  }, [baseURL]);
+  }, []);
+
+  useEffect(() => {
+    const logUrl = baseURL + "api/TrainingLogAPI/GetLoggedExercises";
+    axios
+      .get(logUrl, {
+        params: {
+          username: user?.username,
+          date: date,
+        },
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          setExercisesLogged(response.data.value);
+          axios
+            .get(baseURL + "api/TrainingLogAPI/GetMaxOrder", {
+              params: {
+                username: user?.username,
+                date: date,
+              },
+            })
+            .then((response) => {
+              if (response.status === 200) {
+                setOrder(response.data.value);
+              }
+            });
+        }
+      });
+  }, [date]);
 
   // Function to handle saving the selected exercise
   const handleSave = () => {
@@ -52,47 +83,68 @@ const TrainingLogScreen = () => {
         reps: currentReps,
         weight: currentWeight,
       };
+      const url = baseURL + "api/TrainingLogAPI/LogExercise";
+      axios
+        .post(url, null, {
+          params: {
+            exerciseId: selectedExercise.value,
+            username: user?.username,
+            date: date,
+            order: order,
+            reps: currentReps,
+            weightKg: currentWeight,
+          },
+        })
+        .then((response) => {
+          console.log(response.data.value);
+        });
       setExercisesLogged((prevExercises) => [...prevExercises, newExercise]);
       setOrder((prevOrder) => prevOrder + 1);
     }
   };
 
   // Date picker functions
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
-
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
-
+  const showDatePicker = () => setDatePickerVisibility(true);
+  const hideDatePicker = () => setDatePickerVisibility(false);
   const handleConfirm = (selectedDate: Date) => {
     setDate(selectedDate);
     hideDatePicker();
   };
-
+  const hanldeDisplayLog = () => {
+    setDisplayState(false);
+  };
+  const handleDiplayGraph = () => {
+    setDisplayState(true);
+  };
   // Custom render item for the dropdown list
   const renderItem = (item: any) => {
     return (
-      <View style={styles.item}>
-        <Text style={styles.itemText}>{item.label}</Text>
+      <View style={styles.dropdownItem}>
+        <Text style={styles.dropdownItemText}>{item.label}</Text>
       </View>
     );
   };
+  useEffect(() => {
+    if (currentReps < 0) {
+      setCurretReps(0);
+    }
+    if (currentWeight < 0) {
+      setCurrentWeight(0);
+    }
+  }, [currentReps, currentWeight]);
+  const [displayState, setDisplayState] = useState(false); //false - log, true - graph
 
   return (
-    <View style={styles.container}>
-      <ScrollView>
+    <LinearGradient style={styles.container} colors={["#f5f1e3", "#e8d8c3"]}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logContainer}>
           <Text style={styles.header}>Log your workout</Text>
-
-          {/* DATE PICKER SECTION */}
           <View style={styles.dateRow}>
             <Ionicons
               name="calendar-outline"
-              size={24} // Appropriate size for the icon
-              color="#0077b6" // Color matching your theme
-              style={{ marginRight: 8 }} // Space between the icon and the date text
+              size={24}
+              color="#6f4e37"
+              style={{ marginRight: 8 }}
             />
             <TouchableOpacity onPress={showDatePicker}>
               <Text style={styles.dateText}>{date.toLocaleDateString()}</Text>
@@ -104,8 +156,7 @@ const TrainingLogScreen = () => {
             onConfirm={handleConfirm}
             onCancel={hideDatePicker}
           />
-          {/* END DATE PICKER SECTION */}
-
+          <View></View>
           <Text style={styles.label}>Select an exercise:</Text>
           <Dropdown
             style={styles.dropdown}
@@ -123,72 +174,80 @@ const TrainingLogScreen = () => {
             value={value}
             onChange={(item: any) => {
               setValue(item.value);
+              console.log(item.value);  
             }}
             dropdownStyle={styles.dropdownStyle}
             renderItem={renderItem}
           />
-
-          <View style={styles.containerForLog}>
-            {/* Reps Section */}
-            <View style={styles.section}>
-              <Text style={styles.labelForSave}>Reps:</Text>
+          <View style={styles.navContainer}>
+            <Text onPress={() => hanldeDisplayLog()} style={styles.navText}>
+              Log your workout
+            </Text>
+            <Text onPress={() => handleDiplayGraph()} style={styles.navText}>
+              View graph
+            </Text>
+          </View>      
+          {!displayState && <><View style={styles.logDetails}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Reps:</Text>
               <TouchableOpacity
-                style={styles.button}
+                style={styles.counterButton}
                 onPress={() => setCurretReps(currentReps - 1)}
               >
-                <Text style={styles.buttonText}>-</Text>
+                <Text style={styles.counterButtonText}>-</Text>
               </TouchableOpacity>
               <TextInput
-                style={styles.input}
+                style={styles.counterInput}
                 value={String(currentReps)}
                 editable={false}
               />
               <TouchableOpacity
-                style={styles.button}
+                style={styles.counterButton}
                 onPress={() => setCurretReps(currentReps + 1)}
               >
-                <Text style={styles.buttonText}>+</Text>
+                <Text style={styles.counterButtonText}>+</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Weight Section */}
-            <View style={styles.section}>
-              <Text style={styles.labelForSave}>Weight:</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Weight :</Text>
               <TouchableOpacity
-                style={styles.button}
-                onPress={() => setCurrentWeight(currentWeight - 1)}
+                style={styles.counterButton}
+                onPress={() => setCurrentWeight(currentWeight - 2.5)}
               >
-                <Text style={styles.buttonText}>-</Text>
+                <Text style={styles.counterButtonText}>-</Text>
               </TouchableOpacity>
               <TextInput
-                style={styles.input}
+                style={styles.counterInput}
                 value={String(currentWeight)}
                 editable={false}
               />
               <TouchableOpacity
-                style={styles.button}
-                onPress={() => setCurrentWeight(currentWeight + 1)}
+                style={styles.counterButton}
+                onPress={() => setCurrentWeight(currentWeight + 2.5)}
               >
-                <Text style={styles.buttonText}>+</Text>
+                <Text style={styles.counterButtonText}>+</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Save Button */}
-            <TouchableOpacity onPress={handleSave}>
+            <TouchableOpacity style={styles.saveContainer} onPress={handleSave}>
               <Text style={styles.saveButton}>Save</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Render the logged exercises */}
-          <View>
+          <View style={styles.loggedExercisesContainer}>
             {exercisesLogged.map((exercise) => (
-              <ExerciseLogged key={exercise.order} exercise={exercise} />
+              <ExerciseLogged
+                key={exercise.order}
+                exercise={exercise}
+                date={date}
+                setExercisesLogged={setExercisesLogged}
+                setOrder={setOrder}
+              />
             ))}
-          </View>
+          </View></>}
+        {displayState && <GraphView date={date} exerciseId={value? value : 0}/>}
         </View>
         <Text style={styles.graphText}>Graph</Text>
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -197,137 +256,167 @@ export default TrainingLogScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+  },
+  scrollContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 20,
   },
   logContainer: {
-    backgroundColor: "#af621c",
-    margin: 10,
-    padding: 10,
-    borderRadius: 15,
-  },
-  header: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "white",
-  },
-  dateContainer: {
-    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
     marginBottom: 20,
   },
-
-  label: {
-    marginBottom: 5,
-    color: "white",
-    fontSize: 14,
-  },
-  dropdown: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    backgroundColor: "white",
-  },
-  placeholderStyle: {
-    fontSize: 12,
-    color: "#999",
-  },
-  selectedTextStyle: {
-    fontSize: 12,
-    color: "#333",
-  },
-  inputSearchStyle: {
-    height: 35,
-    fontSize: 12,
-  },
-  iconStyle: {
-    width: 15,
-    height: 15,
-  },
-  dropdownStyle: {
-    position: "absolute",
-    top: 45,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    borderRadius: 6,
-  },
-  item: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  itemText: {
-    fontSize: 12,
-    color: "#333",
-  },
-  graphText: {
-    margin: 10,
-    fontSize: 16,
-  },
-  containerForLog: {
-    backgroundColor: "transparent",
-    width: "80%",
-  },
-  section: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 10,
-    marginLeft: 40,
-  },
-  labelForSave: {
-    fontSize: 16,
+  header: {
+    fontSize: 24,
     fontWeight: "bold",
-    color: "white",
-    marginRight: 10,
-  },
-  button: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginHorizontal: 6,
-  },
-  buttonText: {
-    fontSize: 16,
-    color: "white",
-    fontWeight: "bold",
+    color: "#6f4e37",
+    textAlign: "center",
+    marginBottom: 16,
+    fontFamily: "Georgia",
   },
   dateRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    alignSelf: "center",
+    justifyContent: "center",
+    marginBottom: 16,
   },
   dateText: {
-    fontSize: 14,
-    color: "#0077b6",
-    textAlign: "center",
-    padding: 10,
-    backgroundColor: "#f1f1f1",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    width:250,
-
-  },
-  input: {
+    fontSize: 16,
+    color: "#6f4e37",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     backgroundColor: "#fff",
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#af621c",
-    borderRadius: 6,
-    paddingHorizontal: 12,
+    borderColor: "#d3b8a0",
+    fontFamily: "Georgia",
+  },
+  navContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  navText: {
+    flex: 0.5,
     textAlign: "center",
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#3d1e0f",
+    fontSize: 16,
+    color: "#6f4e37",
+    fontFamily: "Georgia",
+  },
+  label: {
+    fontSize: 18,
+    color: "#6f4e37",
+    marginBottom: 8,
+    fontFamily: "Georgia",
+  },
+  dropdown: {
+    height: 50,
+    borderColor: "#6f4e37",
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    backgroundColor: "#fff",
+    marginBottom: 16,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    color: "#999",
+    fontFamily: "Georgia",
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    color: "#6f4e37",
+    fontFamily: "Georgia",
+  },
+  inputSearchStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 24,
+    height: 24,
+    tintColor: "#6f4e37",
+  },
+  dropdownStyle: {
+    borderRadius: 20,
+  },
+  dropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: "#6f4e37",
+    fontFamily: "Georgia",
+  },
+  logDetails: {
+    marginVertical: 16,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  detailLabel: {
+    fontSize: 18,
+    color: "#6f4e37",
+    fontFamily: "Georgia",
+    marginRight: 12,
+  },
+  counterButton: {
+    backgroundColor: "#6f4e37",
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginHorizontal: 6,
+  },
+  counterButtonText: {
+    fontSize: 20,
+    color: "#fff",
+    fontFamily: "Georgia",
+  },
+  counterInput: {
     width: 50,
+    textAlign: "center",
+    fontSize: 18,
+    color: "#6f4e37",
+    borderBottomWidth: 1,
+    borderColor: "#6f4e37",
+    fontFamily: "Georgia",
+  },
+  saveContainer: {
+    alignSelf: "center",
+    backgroundColor: "#fff",
+    borderRadius: 25,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: "#6f4e37",
+    marginTop: 20,
   },
   saveButton: {
-    color: "white",
-    borderColor: "white",
-    borderRadius: 10,
-    borderWidth: 2,
+    fontSize: 18,
+    color: "#6f4e37",
+    fontWeight: "bold",
+    fontFamily: "Georgia",
+  },
+  loggedExercisesContainer: {
+    marginTop: 20,
+  },
+  graphText: {
+    fontSize: 20,
+    color: "#6f4e37",
     textAlign: "center",
-    marginLeft: 60,
-    padding: 5,
+    fontFamily: "Georgia",
+    marginTop: 20,
   },
 });
