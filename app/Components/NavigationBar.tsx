@@ -25,7 +25,7 @@ const MyTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: "#00aed1",
+    background: "#fff",
     // Global background color for all screens
   },
 };

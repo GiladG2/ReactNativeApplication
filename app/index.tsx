@@ -22,9 +22,4 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  pageContainer: {
-    backgroundColor: "#00aed1",
-    flex: 1,
-  },
-});
+

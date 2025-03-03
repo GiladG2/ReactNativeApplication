@@ -66,6 +66,15 @@ function Log_In({ panel, setPanel }: LogInProps) {
                   accesskey: response.data.accesskey,
                 });
                 setMessage("Logged in");
+                console.log("Adding log in record");
+                axios.post(baseURL + "api/UsersAPI/AddLogInRecord", null, {
+                  params:{
+                    username: values.username
+                  }
+                })
+                .then((response) => {
+                  console.log(response)
+                });
                 setTimeout(() => {
                   navigation.navigate("Home");
                 }, 2000);
@@ -226,6 +235,5 @@ const styles = StyleSheet.create({
 });
 
 export default Log_In;
-
 
 //3088400

@@ -1,5 +1,11 @@
 import React, { useContext, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
 import { Formik } from "formik";
 import { LinearGradient } from "expo-linear-gradient";
 import AuthContext from "../Context/AppContext";
@@ -36,18 +42,26 @@ export default function EditProfile(editProp: EditProfileProps) {
               console.log(values);
               const params = {
                 username: user?.username,
+                firstName: values.firstname,
                 password: values.password,
-                firstname: values.firstname,
                 phonenumber: values.phone,
                 email: values.email,
               };
-              axios.post(baseURL + "", null, {
+              const url = baseURL + "api/UsersAPI/EditProfile";
+              axios.put(url, null, {
                 params: params,
                 headers: {
                   Accept: "application/json",
                   "Content-Type": "application/json;charset=UTF-8",
                 },
-              });
+              })
+              .then((response) => {
+                console.log(response.status)
+                if(response.status === 200)
+                  console.log(response.data)
+                  console.log("User updated successfully")
+              })
+              .catch((error) => console.log(error));
             }}
           >
             {({ handleChange, handleBlur, handleSubmit, values }) => (
@@ -70,7 +84,9 @@ export default function EditProfile(editProp: EditProfileProps) {
                       >
                         <Text style={styles.label}>Firstname</Text>
                         <TouchableOpacity onPress={() => setOpenState(false)}>
-                          <Text style={{ fontSize: 20, color: "white" }}>X</Text>
+                          <Text style={{ fontSize: 20, color: "white" }}>
+                            X
+                          </Text>
                         </TouchableOpacity>
                       </View>
                       <TextInput
@@ -117,7 +133,7 @@ export default function EditProfile(editProp: EditProfileProps) {
                           keyboardType="email-address"
                         />
                       </View>
-                      <TouchableOpacity onPress={() => handleSubmit()}>
+                      <TouchableOpacity onPress={handleSubmit}>
                         <Text
                           style={{
                             color: "white",

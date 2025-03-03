@@ -5,12 +5,12 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import AuthContext from "../Context/AppContext";
 import axios from "axios";
 import ExerciseLogged from "../Components/ExerciseLogged";
-import { TextInput } from "react-native-gesture-handler";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -31,6 +31,9 @@ const TrainingLogScreen = () => {
   // Date picker state
   const [date, setDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+
+  // Display state: false = log view, true = graph view
+  const [displayState, setDisplayState] = useState(false);
 
   // Redirect if user not logged in
   useEffect(() => {
@@ -97,12 +100,7 @@ const TrainingLogScreen = () => {
         weight: currentWeight,
       };
       const url = baseURL + "api/TrainingLogAPI/LogExercise";
-      console.log(newExercise.exerciseId)
-      console.log(user?.username)
-      console.log(date.toISOString())
-      console.log(order)
-      console.log(currentReps)
-      console.log(currentWeight)
+      console.log(exercisesLogged);
       axios
         .post(url, null, {
           params: {
@@ -132,6 +130,7 @@ const TrainingLogScreen = () => {
     hideDatePicker();
   };
 
+  // Toggle display functions
   const handleDisplayLog = () => {
     setDisplayState(false);
   };
@@ -151,8 +150,6 @@ const TrainingLogScreen = () => {
     if (currentReps < 0) setCurrentReps(0);
     if (currentWeight < 0) setCurrentWeight(0);
   }, [currentReps, currentWeight]);
-
-  const [displayState, setDisplayState] = useState(false); // false = log, true = graph
 
   return (
     <LinearGradient style={styles.container} colors={["#f5f1e3", "#e8d8c3"]}>
@@ -201,11 +198,37 @@ const TrainingLogScreen = () => {
             renderItem={renderItem}
           />
           <View style={styles.navContainer}>
-            <TouchableOpacity onPress={handleDisplayLog}>
-              <Text style={styles.navText}>Log your workout</Text>
+            <TouchableOpacity
+              style={[
+                styles.navButton,
+                !displayState && styles.activeNavButton,
+              ]}
+              onPress={handleDisplayLog}
+            >
+              <Text
+                style={[
+                  styles.navText,
+                  !displayState && styles.activeNavText,
+                ]}
+              >
+                Log your workout
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleDisplayGraph}>
-              <Text style={styles.navText}>View graph</Text>
+            <TouchableOpacity
+              style={[
+                styles.navButton,
+                displayState && styles.activeNavButton,
+              ]}
+              onPress={handleDisplayGraph}
+            >
+              <Text
+                style={[
+                  styles.navText,
+                  displayState && styles.activeNavText,
+                ]}
+              >
+                View graph
+              </Text>
             </TouchableOpacity>
           </View>
           {!displayState && (
@@ -329,19 +352,6 @@ const styles = StyleSheet.create({
     borderColor: "#d3b8a0",
     fontFamily: "Georgia",
   },
-  navContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 10,
-  },
-  navText: {
-    flex: 0.5,
-    textAlign: "center",
-    fontSize: 16,
-    color: "#6f4e37",
-    fontFamily: "Georgia",
-  },
   label: {
     fontSize: 18,
     color: "#6f4e37",
@@ -386,6 +396,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#6f4e37",
     fontFamily: "Georgia",
+  },
+  navContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  navButton: {
+    flex: 0.5,
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 2,
+    borderColor: "transparent",
+  },
+  activeNavButton: {
+    borderColor: "#6f4e37",
+  },
+  navText: {
+    fontSize: 16,
+    color: "#6f4e37",
+    fontFamily: "Georgia",
+  },
+  activeNavText: {
+    fontWeight: "bold",
   },
   logDetails: {
     marginVertical: 16,

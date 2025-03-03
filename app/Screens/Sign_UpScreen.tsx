@@ -1,4 +1,3 @@
-import { Formik } from "formik";
 import React, { useContext, useState } from "react";
 import {
   StyleSheet,
@@ -13,6 +12,7 @@ import axios from "axios";
 import * as Yup from "yup"; // Import YUP for validation
 import AuthContext from "../Context/AppContext";
 import { useNavigation } from "expo-router";
+import { Formik } from "formik";
 
 interface Sign_UpProps {
   panel: string;
@@ -24,6 +24,8 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const { user, setUser, baseURL } = useContext(AuthContext)!;
   const navigation = useNavigation();
+  const [message, setMessage] = useState("");
+
   // YUP Validation Schema
   const validationSchema = Yup.object().shape({
     username: Yup.string()
@@ -55,13 +57,13 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
       .required("Gender is required"),
     date: Yup.date().required("Date of birth is required"),
   });
-  const [message, setMessage] = useState("");
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
         <Text style={styles.headerText}>Sign Up</Text>
         <Text style={styles.subHeader}>Create your account</Text>
-        <Text>{message}</Text>
+        <Text style={styles.messageText}>{message}</Text>
         <Formik
           initialValues={{
             username: "",
@@ -74,9 +76,7 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
           }}
           validationSchema={validationSchema}
           onSubmit={(values) => {
-            console.log(values);
             const url = baseURL + "api/UsersAPI/AddUser";
-            console.log(url);
             const params = {
               username: values.username,
               password: values.password,
@@ -97,8 +97,6 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                 },
               })
               .then((response) => {
-                console.log("Response Status:", response.status);
-                console.log("Response Data:", response.data);
                 if (response.data.value.message === "Success") {
                   setMessage("Registered successfully");
                   setTimeout(() => {
@@ -113,42 +111,29 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                         username: values.username,
                         password: values.password,
                       },
-                      withCredentials: true, // Important for sending cookies
+                      withCredentials: true,
                     };
                     axios(options).then(async () => {
                       const sessionResponse = await axios.get(
                         baseURL + "api/UsersAPI/CheckSession"
-                      );
-                      console.log(
-                        "Is Authenticated = " +
-                          sessionResponse.data.isAuthenticated
                       );
                       if (sessionResponse.data.isAuthenticated) {
                         setUser({
                           username: response.data.username,
                           accesskey: response.data.accesskey,
                         });
-                        navigation.navigate('Home');
+                        navigation.navigate("Home");
                       }
                     });
                   }, 1000);
                 }
                 if (response.data.value.message === "This username is taken")
                   setMessage("This username is taken");
-                if (response.data.value.message === "Error") setMessage("Error");
+                if (response.data.value.message === "Error")
+                  setMessage("Error");
               })
               .catch((error) => {
-                if (error.response) {
-                  console.error(
-                    "Error submitting form:",
-                    error.response.status
-                  );
-                  console.error("Error data:", error.response.data);
-                } else if (error.request) {
-                  console.error("No response received:", error.request);
-                } else {
-                  console.error("Error", error.message);
-                }
+                console.error("Error submitting form:", error);
               });
           }}
         >
@@ -167,6 +152,7 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your username"
+                  placeholderTextColor="#aaa"
                   onChangeText={handleChange("username")}
                   onBlur={handleBlur("username")}
                   value={values.username}
@@ -181,6 +167,7 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your password"
+                  placeholderTextColor="#aaa"
                   secureTextEntry
                   onChangeText={handleChange("password")}
                   onBlur={handleBlur("password")}
@@ -196,6 +183,7 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your phone"
+                  placeholderTextColor="#aaa"
                   keyboardType="phone-pad"
                   onChangeText={handleChange("phone")}
                   onBlur={handleBlur("phone")}
@@ -211,6 +199,7 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your email"
+                  placeholderTextColor="#aaa"
                   keyboardType="email-address"
                   onChangeText={handleChange("email")}
                   onBlur={handleBlur("email")}
@@ -220,11 +209,13 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                   <Text style={styles.errorText}>{errors.email}</Text>
                 )}
               </View>
+
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>First Name</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your firstname"
+                  placeholder="Enter your first name"
+                  placeholderTextColor="#aaa"
                   onChangeText={handleChange("firstname")}
                   onBlur={handleBlur("firstname")}
                   value={values.firstname}
@@ -242,7 +233,12 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                   ]}
                   onPress={() => setFieldValue("gender", "0")}
                 >
-                  <Text style={[styles.genderText, { color: "black" }]}>
+                  <Text
+                    style={[
+                      styles.genderText,
+                      values.gender === "0" && styles.selectedGenderText,
+                    ]}
+                  >
                     Male
                   </Text>
                 </TouchableOpacity>
@@ -253,7 +249,12 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                   ]}
                   onPress={() => setFieldValue("gender", "1")}
                 >
-                  <Text style={[styles.genderText, { color: "black" }]}>
+                  <Text
+                    style={[
+                      styles.genderText,
+                      values.gender === "1" && styles.selectedGenderText,
+                    ]}
+                  >
                     Female
                   </Text>
                 </TouchableOpacity>
@@ -267,13 +268,12 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
                   {values.date || "Select Date of Birth"}
                 </Text>
               </TouchableOpacity>
-
               {showDatePicker && (
                 <DateTimePicker
                   value={date}
                   mode="date"
                   display="default"
-                  onChange={(event: any, selectedDate?: Date | undefined) => {
+                  onChange={(event: any, selectedDate?: Date) => {
                     setShowDatePicker(false);
                     if (selectedDate) {
                       setDate(selectedDate);
@@ -288,7 +288,10 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
 
               <Text style={styles.textLink}>
                 Already have an account?{" "}
-                <Text onPress={() => setPanel("false")} style={styles.linkText}>
+                <Text
+                  onPress={() => setPanel("false")}
+                  style={styles.linkText}
+                >
                   Log in
                 </Text>
               </Text>
@@ -307,36 +310,43 @@ function Sign_Up({ panel, setPanel }: Sign_UpProps) {
   );
 }
 
+export default Sign_Up;
+
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1, // Ensures content can scroll
+    flexGrow: 1,
+    backgroundColor: "#FFF8F0", // Matches Log_In container background
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0077b6",
     padding: 15,
   },
   card: {
     width: "100%",
     padding: 25,
     borderRadius: 15,
-    backgroundColor: "white",
+    backgroundColor: "#FFEBD6", // Soft, warm peach tone
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: "#A67C52",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     alignItems: "center",
   },
+  messageText: {
+    fontSize: 14,
+    color: "#A67C52",
+    marginBottom: 10,
+  },
   headerText: {
     fontSize: 28,
-    color: "#0077b6",
+    color: "#A67C52",
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 10,
   },
   subHeader: {
     fontSize: 16,
-    color: "#555",
+    color: "#A67C52",
     textAlign: "center",
     marginBottom: 25,
   },
@@ -346,20 +356,23 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 20,
+    width: "100%",
   },
   label: {
     fontSize: 14,
-    color: "#0077b6",
+    color: "#A67C52",
     marginBottom: 5,
     fontWeight: "500",
   },
   input: {
     width: "100%",
-    backgroundColor: "#f1f1f1",
-    padding: 10,
-    borderRadius: 10,
-    borderColor: "#ccc",
+    backgroundColor: "#FFF",
+    padding: 14,
+    borderRadius: 8,
+    fontSize: 16,
+    color: "#333",
     borderWidth: 1,
+    borderColor: "#E0C3A3",
   },
   errorText: {
     color: "red",
@@ -373,45 +386,51 @@ const styles = StyleSheet.create({
   },
   genderButton: {
     flex: 1,
-    padding: 10,
-    backgroundColor: "#f1f1f1",
-    borderRadius: 10,
+    padding: 14,
+    backgroundColor: "#FFF",
+    borderRadius: 8,
     marginRight: 10,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#E0C3A3",
   },
   selectedGender: {
-    backgroundColor: "#0077b6",
+    backgroundColor: "#A67C52",
   },
   genderText: {
-    color: "#0077b6",
+    fontSize: 14,
+    color: "#A67C52",
+  },
+  selectedGenderText: {
+    color: "#FFF",
   },
   dateText: {
     fontSize: 14,
-    color: "#0077b6",
+    color: "#A67C52",
   },
   textLink: {
     fontSize: 14,
     textAlign: "center",
-    color: "#555",
+    color: "#A67C52",
+    marginTop: 10,
   },
   linkText: {
-    color: "#0077b6",
+    color: "#A67C52",
     fontWeight: "500",
+    textDecorationLine: "underline",
   },
   submitButton: {
-    backgroundColor: "#0077b6",
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: "#A67C52",
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
+    marginTop: 20,
     width: "100%",
   },
   buttonText: {
-    color: "white",
+    color: "#FFF",
     fontSize: 16,
+    fontWeight: "bold",
   },
 });
-
-export default Sign_Up;
