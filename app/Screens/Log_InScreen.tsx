@@ -9,10 +9,10 @@ import {
   Platform,
 } from "react-native";
 import axios from "axios";
-import AppContext from "../Context/AppContext"
-import {  
-  useNavigation } from "expo-router";
+import AppContext from "../Context/AppContext";
+import { useNavigation } from "expo-router";
 axios.defaults.withCredentials = true;
+
 interface LogInProps {
   panel: string;
   setPanel: (panel: string) => void;
@@ -20,12 +20,13 @@ interface LogInProps {
 
 function Log_In({ panel, setPanel }: LogInProps) {
   const [message, setMessage] = useState("");
-  const { user, setUser,baseURL } = useContext(AppContext)!;
+  const { user, setUser, baseURL } = useContext(AppContext)!;
   const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text>{message}</Text>
+        <Text style={styles.messageText}>{message}</Text>
         <Text style={styles.headerText}>Welcome Back!</Text>
         <Text style={styles.subHeader}>Log in to continue</Text>
         <Formik
@@ -43,18 +44,22 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 username: values.username,
                 password: values.password,
               },
-              withCredentials: true // Important for sending cookies
+              withCredentials: true, // Important for sending cookies
             };
-          
+
             try {
               // Send the login request
               const response = await axios(options);
               console.log("Response Status:", response.status);
               console.log("Response Data:", response.data);
-          
+
               // After login, check the session
-              const sessionResponse = await axios.get(baseURL + "api/UsersAPI/CheckSession");
-              console.log("Is Authenticated = " + sessionResponse.data.isAuthenticated)
+              const sessionResponse = await axios.get(
+                baseURL + "api/UsersAPI/CheckSession"
+              );
+              console.log(
+                "Is Authenticated = " + sessionResponse.data.isAuthenticated
+              );
               if (sessionResponse.data.isAuthenticated) {
                 setUser({
                   username: response.data.username,
@@ -62,7 +67,7 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 });
                 setMessage("Logged in");
                 setTimeout(() => {
-                  navigation.navigate('Home')
+                  navigation.navigate("Home");
                 }, 2000);
               } else {
                 setMessage("Invalid username or password");
@@ -100,7 +105,7 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 />
               </View>
 
-              <Text>
+              <Text style={styles.switchText}>
                 Don't have an account?{" "}
                 <Text
                   style={styles.signupText}
@@ -131,32 +136,37 @@ function Log_In({ panel, setPanel }: LogInProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#FFF8F0", // Warm cream background
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0077b6",
   },
   card: {
-    width: "90%",
+    width: "100%",
     padding: 25,
     borderRadius: 15,
-    backgroundColor: "white",
+    backgroundColor: "#FFEBD6", // Soft, warm peach tone
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: "#A67C52",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     alignItems: "center",
   },
+  messageText: {
+    fontSize: 14,
+    color: "#A67C52",
+    marginBottom: 10,
+  },
   headerText: {
     fontSize: 28,
-    color: "#0077b6",
+    color: "#A67C52", // Warm brown
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 10,
   },
   subHeader: {
     fontSize: 16,
-    color: "#555",
+    color: "#A67C52",
     textAlign: "center",
     marginBottom: 25,
   },
@@ -169,27 +179,29 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: "#0077b6",
+    color: "#A67C52",
     marginBottom: 5,
     fontWeight: "500",
   },
   input: {
     width: "100%",
-    backgroundColor: "#f1f1f1",
+    backgroundColor: "#FFF",
     padding: 14,
     borderRadius: 8,
     fontSize: 16,
     color: "#333",
+    borderWidth: 1,
+    borderColor: "#E0C3A3",
   },
   button: {
-    backgroundColor: "#0077b6",
+    backgroundColor: "#A67C52", // Warm brown button
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
     marginTop: 20,
   },
   buttonText: {
-    color: "white",
+    color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -197,15 +209,23 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   linkText: {
-    color: "#0077b6",
+    color: "#A67C52",
     fontSize: 14,
     textDecorationLine: "underline",
   },
   signupText: {
     fontWeight: "bold",
     textDecorationLine: "underline",
-    color: "#0077b6",
+    color: "#A67C52",
+  },
+  switchText: {
+    color: "#A67C52",
+    marginTop: 10,
+    textAlign: "center",
   },
 });
 
 export default Log_In;
+
+
+//3088400

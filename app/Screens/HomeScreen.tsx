@@ -6,18 +6,17 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Animated,
-  Platform,
 } from "react-native";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 import AuthContext from "../Context/AppContext";
-import GuestHome from "../Components/GuestHome";
-import LoggedHome from "../Components/LoggedHome";
+import { useNavigation } from "expo-router";
 
 export default function HomeScreen() {
   const [fadeAnim] = useState(new Animated.Value(0)); // Initial fade value
   const { user, setUser, baseURL } = useContext(AuthContext)!;
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     // Fade-in animation for the welcome text
     Animated.timing(fadeAnim, {
@@ -26,6 +25,8 @@ export default function HomeScreen() {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  // Session logic remains unchanged
   useEffect(() => {
     axios
       .get(baseURL + "api/UsersAPI/CheckSession")
@@ -41,29 +42,37 @@ export default function HomeScreen() {
       .finally(() => setLoading(false));
   });
 
-  const handleButtonPress = () => {
-    // Handle the button press (e.g., navigating to the workout logging screen)
+  const handleStartLogging = () => {
+    const navigation = useNavigation();
+    if (user) navigation.navigate('Training log');
+    else navigation.navigate('Get started');
   };
+
   const handleLogOut = () => {
     var url = baseURL + "api/UsersAPI/Logout";
     axios.post(url).then((response) => {
       console.log(response.data.message);
     });
   };
+
   return (
-    
     <SafeAreaView style={styles.container}>
-      <View style={styles.overlay}>
+      <View style={styles.contentWrapper}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          <Text style={styles.headerText}>
-            Welcome to OneLife! Log your workouts on the fly!
-            <Text>Username: {user?.username}</Text>
+          <Text style={styles.headerText}>Welcome to OneLife!</Text>
+          <Text style={styles.taglineText}>Log your workouts on the fly!</Text>
+          <Text style={styles.usernameText}>
+            Hello {user ? user?.username : "guest"}
           </Text>
           <Text style={styles.subHeaderText}>
             Stay consistent, track your progress, and reach your goals!
           </Text>
-          <Text onPress={() => handleLogOut()}>Log out</Text>
-          <TouchableOpacity style={styles.button} onPress={handleButtonPress}>
+          {user && (
+            <Text style={styles.logoutText} onPress={handleLogOut}>
+              Log out
+            </Text>
+          )}
+          <TouchableOpacity style={styles.button} onPress={handleStartLogging}>
             <Text style={styles.buttonText}>Start Logging</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -75,47 +84,61 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:"#00aed1"
+    backgroundColor: "#ffffff",
   },
-  background: {
+  contentWrapper: {
     flex: 1,
-    justifyContent: "center",
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: "center",
+    margin: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent overlay
+    justifyContent: "center",
   },
   content: {
     alignItems: "center",
-    marginHorizontal: 20,
   },
   headerText: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#333",
     textAlign: "center",
+    marginBottom: 5,
+  },
+  taglineText: {
+    fontSize: 18,
+    color: "#555",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  usernameText: {
+    fontSize: 16,
+    fontWeight: "normal",
+    color: "#777",
     marginBottom: 15,
-    paddingHorizontal: 20,
   },
   subHeaderText: {
     fontSize: 18,
-    color: "#ddd",
+    fontStyle: "italic",
+    color: "#444",
     textAlign: "center",
-    marginBottom: 30,
-    paddingHorizontal: 30,
+    marginVertical: 15,
+    lineHeight: 24,
+  },
+  logoutText: {
+    fontSize: 14,
+    color: "#007BFF",
+    marginBottom: 20,
   },
   button: {
-    backgroundColor: "#00aed1",
+    backgroundColor: "#007BFF",
     paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-    marginTop: 20,
+    paddingHorizontal: 25,
+    borderRadius: 8,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });

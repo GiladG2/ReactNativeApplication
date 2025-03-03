@@ -11,6 +11,7 @@ interface EditProfileProps {
   nameData: string;
   phoneData: string;
 }
+//הוא אמר שהשתדלת לא להתפוצץ מצחוק
 
 export default function EditProfile(editProp: EditProfileProps) {
   const { user, baseURL } = useContext(AuthContext)!;

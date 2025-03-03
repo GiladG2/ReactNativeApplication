@@ -1,4 +1,4 @@
-import React,  { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -16,40 +16,49 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 import Exercise from "../Interfaces/IExercise";
 import GraphView from "../Components/GraphView";
+import { useNavigation } from "@react-navigation/native";
 
 const TrainingLogScreen = () => {
   const [exercisesLogged, setExercisesLogged] = useState<Exercise[]>([]);
-  const [value, setValue] = useState(null);
-  const { baseURL } = useContext(AuthContext)!;
+  const [value, setValue] = useState<any>(null);
+  const { baseURL, user } = useContext(AuthContext)!;
   const [exercises, setExercises] = useState<any[]>([]);
-  const [exerciseId, setExerciseId] = useState(0);
-  const [currentReps, setCurretReps] = useState(0);
+  const [currentReps, setCurrentReps] = useState(0);
   const [currentWeight, setCurrentWeight] = useState(0);
   const [order, setOrder] = useState(1);
-  const { user } = useContext(AuthContext)!;
+  const navigation = useNavigation();
 
   // Date picker state
   const [date, setDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
+  // Redirect if user not logged in
+  useEffect(() => {
+    if (!user?.username) {
+      navigation.navigate("Home");
+    }
+  }, [user, navigation]);
+
   // Fetch the exercises list from your API
   useEffect(() => {
     const url = baseURL + "api/ExercisesAPI/GetExerciseList";
-    axios.get(url).then((response) => {
+    axios.get(url, { withCredentials: true }).then((response) => {
       if (response.status === 200) {
         setExercises(response.data.value);
       }
     });
-  }, []);
+  }, [baseURL]);
 
+  // Fetch logged exercises and max order when the date changes
   useEffect(() => {
     const logUrl = baseURL + "api/TrainingLogAPI/GetLoggedExercises";
     axios
       .get(logUrl, {
         params: {
           username: user?.username,
-          date: date,
+          date: date.toISOString(),
         },
+        withCredentials: true,
       })
       .then((response) => {
         if (response.status === 200) {
@@ -58,8 +67,9 @@ const TrainingLogScreen = () => {
             .get(baseURL + "api/TrainingLogAPI/GetMaxOrder", {
               params: {
                 username: user?.username,
-                date: date,
+                date: date.toISOString(),
               },
+              withCredentials: true,
             })
             .then((response) => {
               if (response.status === 200) {
@@ -67,8 +77,11 @@ const TrainingLogScreen = () => {
               }
             });
         }
-      });
-  }, [date]);
+      })
+      .catch((error) =>
+        console.error("Error fetching logged exercises:", error)
+      );
+  }, [date, baseURL, user?.username]);
 
   // Function to handle saving the selected exercise
   const handleSave = () => {
@@ -84,22 +97,30 @@ const TrainingLogScreen = () => {
         weight: currentWeight,
       };
       const url = baseURL + "api/TrainingLogAPI/LogExercise";
+      console.log(newExercise.exerciseId)
+      console.log(user?.username)
+      console.log(date.toISOString())
+      console.log(order)
+      console.log(currentReps)
+      console.log(currentWeight)
       axios
         .post(url, null, {
           params: {
-            exerciseId: selectedExercise.value,
+            exerciseId: newExercise.exerciseId,
             username: user?.username,
-            date: date,
+            date: date.toISOString(),
             order: order,
             reps: currentReps,
             weightKg: currentWeight,
           },
+          withCredentials: true,
         })
         .then((response) => {
-          console.log(response.data.value);
-        });
-      setExercisesLogged((prevExercises) => [...prevExercises, newExercise]);
-      setOrder((prevOrder) => prevOrder + 1);
+          console.log("LogExercise response:", response.data.value);
+        })
+        .catch((error) => console.error("Error logging exercise:", error));
+      setExercisesLogged((prev) => [...prev, newExercise]);
+      setOrder((prev) => prev + 1);
     }
   };
 
@@ -110,29 +131,28 @@ const TrainingLogScreen = () => {
     setDate(selectedDate);
     hideDatePicker();
   };
-  const hanldeDisplayLog = () => {
+
+  const handleDisplayLog = () => {
     setDisplayState(false);
   };
-  const handleDiplayGraph = () => {
+  const handleDisplayGraph = () => {
     setDisplayState(true);
   };
+
   // Custom render item for the dropdown list
-  const renderItem = (item: any) => {
-    return (
-      <View style={styles.dropdownItem}>
-        <Text style={styles.dropdownItemText}>{item.label}</Text>
-      </View>
-    );
-  };
+  const renderItem = (item: any) => (
+    <View style={styles.dropdownItem}>
+      <Text style={styles.dropdownItemText}>{item.label}</Text>
+    </View>
+  );
+
+  // Prevent negative values
   useEffect(() => {
-    if (currentReps < 0) {
-      setCurretReps(0);
-    }
-    if (currentWeight < 0) {
-      setCurrentWeight(0);
-    }
+    if (currentReps < 0) setCurrentReps(0);
+    if (currentWeight < 0) setCurrentWeight(0);
   }, [currentReps, currentWeight]);
-  const [displayState, setDisplayState] = useState(false); //false - log, true - graph
+
+  const [displayState, setDisplayState] = useState(false); // false = log, true = graph
 
   return (
     <LinearGradient style={styles.container} colors={["#f5f1e3", "#e8d8c3"]}>
@@ -147,7 +167,9 @@ const TrainingLogScreen = () => {
               style={{ marginRight: 8 }}
             />
             <TouchableOpacity onPress={showDatePicker}>
-              <Text style={styles.dateText}>{date.toLocaleDateString()}</Text>
+              <Text style={styles.dateText}>
+                {date.toLocaleDateString()}
+              </Text>
             </TouchableOpacity>
           </View>
           <DateTimePickerModal
@@ -156,7 +178,6 @@ const TrainingLogScreen = () => {
             onConfirm={handleConfirm}
             onCancel={hideDatePicker}
           />
-          <View></View>
           <Text style={styles.label}>Select an exercise:</Text>
           <Dropdown
             style={styles.dropdown}
@@ -174,76 +195,85 @@ const TrainingLogScreen = () => {
             value={value}
             onChange={(item: any) => {
               setValue(item.value);
-              console.log(item.value);  
+              console.log("Selected value:", item.value);
             }}
             dropdownStyle={styles.dropdownStyle}
             renderItem={renderItem}
           />
           <View style={styles.navContainer}>
-            <Text onPress={() => hanldeDisplayLog()} style={styles.navText}>
-              Log your workout
-            </Text>
-            <Text onPress={() => handleDiplayGraph()} style={styles.navText}>
-              View graph
-            </Text>
-          </View>      
-          {!displayState && <><View style={styles.logDetails}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Reps:</Text>
-              <TouchableOpacity
-                style={styles.counterButton}
-                onPress={() => setCurretReps(currentReps - 1)}
-              >
-                <Text style={styles.counterButtonText}>-</Text>
-              </TouchableOpacity>
-              <TextInput
-                style={styles.counterInput}
-                value={String(currentReps)}
-                editable={false}
-              />
-              <TouchableOpacity
-                style={styles.counterButton}
-                onPress={() => setCurretReps(currentReps + 1)}
-              >
-                <Text style={styles.counterButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Weight :</Text>
-              <TouchableOpacity
-                style={styles.counterButton}
-                onPress={() => setCurrentWeight(currentWeight - 2.5)}
-              >
-                <Text style={styles.counterButtonText}>-</Text>
-              </TouchableOpacity>
-              <TextInput
-                style={styles.counterInput}
-                value={String(currentWeight)}
-                editable={false}
-              />
-              <TouchableOpacity
-                style={styles.counterButton}
-                onPress={() => setCurrentWeight(currentWeight + 2.5)}
-              >
-                <Text style={styles.counterButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.saveContainer} onPress={handleSave}>
-              <Text style={styles.saveButton}>Save</Text>
+            <TouchableOpacity onPress={handleDisplayLog}>
+              <Text style={styles.navText}>Log your workout</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleDisplayGraph}>
+              <Text style={styles.navText}>View graph</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.loggedExercisesContainer}>
-            {exercisesLogged.map((exercise) => (
-              <ExerciseLogged
-                key={exercise.order}
-                exercise={exercise}
-                date={date}
-                setExercisesLogged={setExercisesLogged}
-                setOrder={setOrder}
-              />
-            ))}
-          </View></>}
-        {displayState && <GraphView date={date} exerciseId={value? value : 0}/>}
+          {!displayState && (
+            <>
+              <View style={styles.logDetails}>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Reps:</Text>
+                  <TouchableOpacity
+                    style={styles.counterButton}
+                    onPress={() => setCurrentReps(currentReps - 1)}
+                  >
+                    <Text style={styles.counterButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <TextInput
+                    style={styles.counterInput}
+                    value={String(currentReps)}
+                    editable={false}
+                  />
+                  <TouchableOpacity
+                    style={styles.counterButton}
+                    onPress={() => setCurrentReps(currentReps + 1)}
+                  >
+                    <Text style={styles.counterButtonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Weight :</Text>
+                  <TouchableOpacity
+                    style={styles.counterButton}
+                    onPress={() => setCurrentWeight(currentWeight - 2.5)}
+                  >
+                    <Text style={styles.counterButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <TextInput
+                    style={styles.counterInput}
+                    value={String(currentWeight)}
+                    editable={false}
+                  />
+                  <TouchableOpacity
+                    style={styles.counterButton}
+                    onPress={() => setCurrentWeight(currentWeight + 2.5)}
+                  >
+                    <Text style={styles.counterButtonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={styles.saveContainer}
+                  onPress={handleSave}
+                >
+                  <Text style={styles.saveButton}>Save</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.loggedExercisesContainer}>
+                {exercisesLogged.map((exercise) => (
+                  <ExerciseLogged
+                    key={exercise.order}
+                    exercise={exercise}
+                    date={date}
+                    setExercisesLogged={setExercisesLogged}
+                    setOrder={setOrder}
+                  />
+                ))}
+              </View>
+            </>
+          )}
+          {displayState && (
+            <GraphView date={date} exerciseId={value ? value : 0} />
+          )}
         </View>
         <Text style={styles.graphText}>Graph</Text>
       </ScrollView>
