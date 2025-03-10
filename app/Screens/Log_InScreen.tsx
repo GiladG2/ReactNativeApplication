@@ -6,7 +6,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Platform,
 } from "react-native";
 import axios from "axios";
 import AppContext from "../Context/AppContext";
@@ -44,7 +43,7 @@ function Log_In({ panel, setPanel }: LogInProps) {
                 username: values.username,
                 password: values.password,
               },
-              withCredentials: true, // Important for sending cookies
+              withCredentials: true,
             };
 
             try {
