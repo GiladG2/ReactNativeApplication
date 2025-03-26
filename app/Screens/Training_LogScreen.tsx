@@ -84,13 +84,14 @@ const TrainingLogScreen = () => {
       .catch((error) =>
         console.error("Error fetching logged exercises:", error)
       );
-  }, [date, baseURL, user?.username]);
+  }, [date, baseURL, user?.username,exercisesLogged]);
 
   // Function to handle saving the selected exercise
   const handleSave = () => {
     const selectedExercise = exercises.find(
       (exercise) => exercise.value === value
     );
+    console.log("Selected exercise:", selectedExercise);
     if (selectedExercise) {
       const newExercise: Exercise = {
         exerciseId: selectedExercise.value,
@@ -100,13 +101,14 @@ const TrainingLogScreen = () => {
         weight: currentWeight,
       };
       const url = baseURL + "api/TrainingLogAPI/LogExercise";
+      console.log(order);
       console.log(exercisesLogged);
       axios
         .post(url, null, {
           params: {
             exerciseId: newExercise.exerciseId,
             username: user?.username,
-            date: date.toISOString(),
+            date: date.toLocaleDateString('en-US'),
             order: order,
             reps: currentReps,
             weightKg: currentWeight,

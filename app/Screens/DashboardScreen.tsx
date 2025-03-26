@@ -115,7 +115,7 @@ const DashboardScreen = () => {
               <Text style={styles.infoLabel}>Name</Text>
               <Text style={styles.info}>{userData.name}</Text>
               <Text style={styles.infoLabel}>Password</Text>
-              <Text style={styles.info}>••••••••</Text>{" "}
+              <Text style={styles.info}>••••••••</Text>
               {/* Hide actual password */}
               <Text style={styles.infoLabel}>Email</Text>
               <Text style={styles.info}>{userData.email}</Text>

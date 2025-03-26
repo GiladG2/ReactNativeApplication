@@ -28,14 +28,17 @@ const ExerciseLogged = ({
 
   // local state to toggle edit mode and hold edited values
   const [editState, setEditState] = useState(false);
-  const [editedReps, setEditedReps] = useState<number>(exercise.reps);
-  const [editedWeight, setEditedWeight] = useState<number>(exercise.weight);
+  const [editedReps, setEditedReps] = useState(0);
+  const [editedWeight, setEditedWeight] = useState(0);
 
   // Optional: update local state if the exercise prop changes
+
   useEffect(() => {
-    setEditedReps(exercise.reps);
-    setEditedWeight(exercise.weight);
-  }, [exercise]);
+    if (editState) {
+      setEditedReps(exercise.reps);  // Reset to initial reps when edit mode starts
+      setEditedWeight(exercise.weight); // Reset to initial weight when edit mode starts
+    }
+  }, [editState]);
   useEffect(() => {
     if (editedReps < 0) setEditedReps(0);
     if (editedWeight < 0) setEditedWeight(0);
@@ -54,7 +57,7 @@ const ExerciseLogged = ({
       })
       .then((response) => {
         if (response.status === 200) {
-          console.log(response.data)
+          console.log(response.data);
           if (response.data.value == true) {
             console.log("Exercise updated successfully");
             setExercisesLogged((prevExercises) =>
@@ -159,7 +162,14 @@ const ExerciseLogged = ({
       <View style={styles.actionsContainer}>
         <TouchableOpacity>
           {!editState ? (
-            <Text style={styles.actionText} onPress={() => setEditState(true)}>
+            <Text
+              style={styles.actionText}
+              onPress={() => {
+                setEditState(true);
+                setEditedReps((exercise.reps)) ;
+                setEditedWeight(exercise.weight)
+              }}
+            >
               Edit
             </Text>
           ) : (
